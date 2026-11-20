@@ -14,8 +14,8 @@ except Exception:
 from PySide6.QtGui import QFontDatabase, QIcon, QFont
 from PySide6.QtWidgets import QApplication
 
-from wildcard_manager import theme
-from wildcard_manager.main_window import MainWindow
+from wildcard_deck import theme
+from wildcard_deck.main_window import MainWindow
 
 UI_FONT_FAMILIES = ["Yu Gothic UI", "Yu Gothic", "Meiryo UI", "Meiryo", "Segoe UI", "Noto Sans CJK JP", "MS Gothic"]
 
@@ -30,10 +30,10 @@ def _choose_ui_font_family() -> str:
 
 def main() -> int:
     app_dir = Path(__file__).resolve().parent
-    from wildcard_manager.logging_setup import setup_logging
+    from wildcard_deck.logging_setup import setup_logging
     setup_logging(app_dir)
     import logging
-    log = logging.getLogger("wildcard_manager")
+    log = logging.getLogger("wildcard_deck")
     app_id = "CompassLab.WildcardManager"
     try:
         windll.shell32.SetCurrentProcessExplicitAppUserModelID(app_id)
@@ -47,9 +47,9 @@ def main() -> int:
         log.debug("Failed to hide console window", exc_info=True)
     app = QApplication(sys.argv)
     # 表示言語は QApplication 生成直後・ウィジェット生成前に確定させる。
-    # 個々のウィジェットは表示イベントでカタログ翻訳される（wildcard_manager/i18n.py）。
-    from wildcard_manager import i18n
-    from wildcard_manager.config import SettingsStore
+    # 個々のウィジェットは表示イベントでカタログ翻訳される（wildcard_deck/i18n.py）。
+    from wildcard_deck import i18n
+    from wildcard_deck.config import SettingsStore
     i18n.install(app)
     i18n.set_language(SettingsStore(app_dir).load().ui_language)
     app.setApplicationName("Wildcard Deck")

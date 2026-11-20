@@ -5,6 +5,13 @@
 All notable changes to Wildcard Deck are summarized here.
 The full development notes — including implementation details and verification results — are preserved in Japanese in [README.ja.md](README.ja.md).
 
+## Unreleased — Standalone Wildcard Deck body
+
+- The `wildcard_deck/` folder is now the standalone app body and the source of truth for GitHub (push origin switched to it). The Python package and the SQLite index were renamed from `wildcard_manager/` / `wildcard_manager.db` to `wildcard_deck/` / `wildcard_deck.db`; imports, the i18n catalog path, the logger name, tests, README and docs were updated accordingly (verified: 360 catalog entries load per language; py_compile/import pass offscreen).
+- The original `H:\wildcard manager\wildcard_manager` package keeps its name untouched — the opencode session history depends on that exact path; separation was done by copy, never by renaming/moving it.
+- Non-code working files (LoRA training experiments, backups, logs, editor debris) were moved back to the `H:\wildcard manager` side or sent to the Recycle Bin; none were erased.
+- The `AppUserModelID` (`CompassLab.WildcardManager`) and the icon asset file name (`wildcard_manager_icon.ico`) remain unchanged.
+
 ## Unreleased — Renamed to Wildcard Deck
 
 - Renamed the product from "Wildcard Manager" to **Wildcard Deck** (window title, application name, About dialog, and documentation).

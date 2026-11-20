@@ -1,7 +1,7 @@
 """Internationalization (i18n) support for Wildcard Deck.
 
 The UI source strings are authored in Japanese. Translation catalogs live in
-``wildcard_manager/i18n/<code>.json`` and map the Japanese source text to the
+``wildcard_deck/i18n/<code>.json`` and map the Japanese source text to the
 target language. Nothing has to be changed at the call sites for static widget
 texts: the installed application event filter translates any widget (and its
 children) the moment it is shown, and :func:`retranslate_all` re-applies the

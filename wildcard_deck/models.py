@@ -10,7 +10,7 @@ class AppSettings:
     thumbnail_root: str
     source_wildcard_root: str
     source_thumbnail_root: str
-    # 表示言語: ja / en / ko / zh（wildcard_manager/i18n のカタログに対応）
+    # 表示言語: ja / en / ko / zh（wildcard_deck/i18n のカタログに対応）
     ui_language: str = "ja"
     api_base_url: str = "http://127.0.0.1:7860"
     api_timeout_sec: int = 120
