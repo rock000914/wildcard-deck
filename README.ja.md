@@ -79,6 +79,13 @@ pip install PySide6 Pillow requests
 python app.py
 ```
 
+### 表示言語
+
+`設定` → `共通設定` の **表示言語** で `日本語` / `English` / `한국어` / `中文（简体）` を切り替えられます。
+選択は `config.json` の `ui_language` に保存され、再起動なしでUIに反映されます。
+翻訳カタログは `wildcard_manager/i18n/<code>.json`（日本語の原文をキーにした対応表）で、
+未翻訳の文字列は日本語のまま表示されます。
+
 ## 初回設定
 
 1. `設定` タブで以下を確認・入力:
@@ -98,6 +105,8 @@ python app.py
 | `wildcard_manager/repository.py` | SQLite + ファイルシステム操作 |
 | `wildcard_manager/models.py` | データモデル（AppSettings, WildcardEntry） |
 | `wildcard_manager/config.py` | 設定の読み書き |
+| `wildcard_manager/i18n.py` | 表示言語の切り替え（ウィジェット翻訳・カタログ読込） |
+| `wildcard_manager/i18n/*.json` | 英語・韓国語・中国語の翻訳カタログ |
 | `wildcard_manager/thumbnail_model.py` | サムネイル一覧のモデルとデリゲート |
 | `wildcard_manager/thumbnail_workers.py` | サムネイル読込ワーカー |
 | `wildcard_manager/tag_editor.py` | タグエディットウィジェット |

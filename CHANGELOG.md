@@ -5,6 +5,14 @@
 All notable changes to Wildcard Manager are summarized here.
 The full development notes — including implementation details and verification results — are preserved in Japanese in [README.ja.md](README.ja.md).
 
+## Unreleased — Localization
+
+- UI language selector (Japanese / English / Korean / Simplified Chinese) in Settings > General; stored as `ui_language` in `config.json` and applied immediately without a restart
+- Translation catalogs in `wildcard_manager/i18n/en.json`, `ko.json`, and `zh.json` (keyed by the Japanese source text); untranslated strings fall back to Japanese
+- Settings: the LoRA folder now appears at the top of the General tab
+- API errors are translated into readable, cause-specific messages (connection refused / timeout / HTTP / SSL)
+- Removed the unused `app.pyw` entry point
+
 ## v2.5 — 2026-11-03 — UI Redesign
 
 A visual redesign only, modeled on professional asset browsers. Existing workflows were not changed, except for the new prompt-tag actions below.
