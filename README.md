@@ -92,8 +92,8 @@ Custom tags are stored in a sidecar `.wcm.json` file next to each `.txt`, so you
 ### Install
 
 ```bash
-git clone https://github.com/rock000914/wildcard-manager.git
-cd wildcard-manager
+git clone https://github.com/rock000914/wildcard-deck.git
+cd wildcard-deck
 pip install -r requirements.txt
 ```
 
