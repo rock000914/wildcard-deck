@@ -40,10 +40,10 @@
 
 | ファイル | 変更内容 |
 |---------|---------|
-| `wildcard_deck/main_window.py` | `dragEnterEvent` / `dropEvent` の拡張。画像ファイル受信時の処理追加 |
-| `wildcard_deck/new_wildcard_dialog.py` | プロンプトプリフィル機能、サムネイルプレビュー表示機能の追加 |
-| `wildcard_deck/api.py` | wd14 tagger API クライアントの追加（スタンドアロンサーバー用） |
-| `wildcard_deck/models.py` | `AppSettings` に tagger サーバー URL を追加（任意） |
+| `wildcard_manager/main_window.py` | `dragEnterEvent` / `dropEvent` の拡張。画像ファイル受信時の処理追加 |
+| `wildcard_manager/new_wildcard_dialog.py` | プロンプトプリフィル機能、サムネイルプレビュー表示機能の追加 |
+| `wildcard_manager/api.py` | wd14 tagger API クライアントの追加（スタンドアロンサーバー用） |
+| `wildcard_manager/models.py` | `AppSettings` に tagger サーバー URL を追加（任意） |
 
 ## [S5] 設計詳細
 

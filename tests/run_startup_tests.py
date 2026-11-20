@@ -3,7 +3,7 @@
 Checks performed:
 - Detect function-local (indented) imports (tools/check_local_imports.py)
 - Compile all .py files to catch SyntaxError/IndentationError
-- Try importing key modules: `wildcard_deck.main_window`, `wildcard_deck.new_wildcard_dialog`
+- Try importing key modules: `wildcard_manager.main_window`, `wildcard_manager.new_wildcard_dialog`
 
 Exit code 0 on success, non-zero on failure.
 """
@@ -39,8 +39,8 @@ def try_imports():
     print('Trying to import critical modules...')
     sys.path.insert(0, str(ROOT))
     try:
-        import wildcard_deck.main_window as mw
-        import wildcard_deck.new_wildcard_dialog as nd
+        import wildcard_manager.main_window as mw
+        import wildcard_manager.new_wildcard_dialog as nd
     except Exception as e:
         print('Import failed:')
         import traceback

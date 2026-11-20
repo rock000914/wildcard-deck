@@ -74,7 +74,7 @@ library/
         ├── character1.preview.webp   # 1st image
         └── character1.g2.webp        # 2nd and later images (.g3, .g4, …)
 
-wildcard_deck.db   # SQLite index (for fast browsing of large libraries)
+wildcard_manager.db   # SQLite index (for fast browsing of large libraries)
 config.json           # Settings
 ui_state.json         # UI state (sort order, splitter positions, …)
 ```
@@ -109,7 +109,7 @@ On Windows you can also double-click `run_wildcard_deck.bat`, which launches the
 
 Choose **Settings → General → Language** to switch between 日本語, English, 한국어, and 中文（简体）.
 The choice is saved as `ui_language` in `config.json` and applies immediately without a restart.
-Translations live in `wildcard_deck/i18n/<code>.json` (keyed by the Japanese source text);
+Translations live in `wildcard_manager/i18n/<code>.json` (keyed by the Japanese source text);
 strings without a translation fall back to Japanese.
 
 ## First-Time Setup
@@ -130,25 +130,25 @@ Thumbnail generation requires a running sd-webui-compatible API (e.g. AUTOMATIC1
 | File | Role |
 | --- | --- |
 | `app.py` | Entry point |
-| `wildcard_deck/main_window.py` | Main window |
-| `wildcard_deck/api.py` | sd-webui API client |
-| `wildcard_deck/repository.py` | SQLite + filesystem operations |
-| `wildcard_deck/models.py` | Data models (`AppSettings`, `WildcardEntry`) |
-| `wildcard_deck/config.py` | Settings persistence |
-| `wildcard_deck/i18n.py` | UI language switching (widget translation, catalog loading) |
-| `wildcard_deck/i18n/*.json` | English / Korean / Chinese translation catalogs |
-| `wildcard_deck/theme.py` | Design system — colors, dimensions, widget builders (single source for appearance) |
-| `wildcard_deck/icons.py` | Line icons drawn at 2x resolution |
-| `wildcard_deck/thumbnail_model.py` | Thumbnail list model and delegate |
-| `wildcard_deck/thumbnail_workers.py` | Thumbnail loading workers |
-| `wildcard_deck/single_thumbnail_worker.py` | Single-thumbnail generation worker |
-| `wildcard_deck/workers.py` | Background workers |
-| `wildcard_deck/widgets.py` | Shared widgets |
-| `wildcard_deck/tag_editor.py` | Tag editor widget |
-| `wildcard_deck/new_wildcard_dialog.py` | New-wildcard creation dialog |
-| `wildcard_deck/settings_dialog.py` | Settings dialog |
-| `wildcard_deck/ui_utils.py` | File-manager helpers and shared context menus |
-| `wildcard_deck/logging_setup.py` | Logging setup |
+| `wildcard_manager/main_window.py` | Main window |
+| `wildcard_manager/api.py` | sd-webui API client |
+| `wildcard_manager/repository.py` | SQLite + filesystem operations |
+| `wildcard_manager/models.py` | Data models (`AppSettings`, `WildcardEntry`) |
+| `wildcard_manager/config.py` | Settings persistence |
+| `wildcard_manager/i18n.py` | UI language switching (widget translation, catalog loading) |
+| `wildcard_manager/i18n/*.json` | English / Korean / Chinese translation catalogs |
+| `wildcard_manager/theme.py` | Design system — colors, dimensions, widget builders (single source for appearance) |
+| `wildcard_manager/icons.py` | Line icons drawn at 2x resolution |
+| `wildcard_manager/thumbnail_model.py` | Thumbnail list model and delegate |
+| `wildcard_manager/thumbnail_workers.py` | Thumbnail loading workers |
+| `wildcard_manager/single_thumbnail_worker.py` | Single-thumbnail generation worker |
+| `wildcard_manager/workers.py` | Background workers |
+| `wildcard_manager/widgets.py` | Shared widgets |
+| `wildcard_manager/tag_editor.py` | Tag editor widget |
+| `wildcard_manager/new_wildcard_dialog.py` | New-wildcard creation dialog |
+| `wildcard_manager/settings_dialog.py` | Settings dialog |
+| `wildcard_manager/ui_utils.py` | File-manager helpers and shared context menus |
+| `wildcard_manager/logging_setup.py` | Logging setup |
 
 ## Roadmap
 

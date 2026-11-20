@@ -8,13 +8,13 @@ The full development notes — including implementation details and verification
 ## Unreleased — Renamed to Wildcard Deck
 
 - Renamed the product from "Wildcard Manager" to **Wildcard Deck** (window title, application name, About dialog, and documentation).
-- Renamed the launcher to `run_wildcard_deck.bat` / `.vbs`, the Python package directory to `wildcard_deck/` (all imports and references updated), and the SQLite index file to `wildcard_deck.db`, because the public name "Wildcard Manager" collides with existing well-known extensions. The `AppUserModelID` (`CompassLab.WildcardManager`) and the icon asset file name (`wildcard_manager_icon.ico`) are kept unchanged, as they are OS-internal identifiers that do not appear as a public/project name.
+- The launcher was renamed to `run_wildcard_deck.bat` / `.vbs` (kept). The Python package directory and the SQLite index were first renamed to `wildcard_deck/` / `wildcard_deck.db`, but that folder also contained many non-code working files, so the package and DB were reverted to their original names (`wildcard_manager/` and `wildcard_manager.db`), and the non-code files were separated into a new top-level `wildcard_deck/` folder that is **not** part of the Python package and is never imported. The `AppUserModelID` (`CompassLab.WildcardManager`) and the icon asset file name (`wildcard_manager_icon.ico`) remain unchanged.
 - Officially set the **category** to *Wildcard Desktop Manager* and the **feature set** to ワイルドカードの作成・編集・整理・検索 (create / edit / organize / search wildcards).
 
 ## Unreleased — Localization
 
 - UI language selector (Japanese / English / Korean / Simplified Chinese) in Settings > General; stored as `ui_language` in `config.json` and applied immediately without a restart
-- Translation catalogs in `wildcard_deck/i18n/en.json`, `ko.json`, and `zh.json` (keyed by the Japanese source text); untranslated strings fall back to Japanese
+- Translation catalogs in `wildcard_manager/i18n/en.json`, `ko.json`, and `zh.json` (keyed by the Japanese source text); untranslated strings fall back to Japanese
 - Settings: the LoRA folder now appears at the top of the General tab
 - API errors are translated into readable, cause-specific messages (connection refused / timeout / HTTP / SSL)
 - Removed the unused `app.pyw` entry point

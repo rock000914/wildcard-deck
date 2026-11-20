@@ -12,7 +12,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from wildcard_deck.main_window import MainWindow  # noqa: E402
+from wildcard_manager.main_window import MainWindow  # noqa: E402
 
 
 class FakeView:

@@ -766,7 +766,7 @@ class MainWindow(QMainWindow):
     def __init__(self, app_dir: Path):
         super().__init__()
         self.app_dir = app_dir
-        self.db_path = app_dir / "wildcard_deck.db"
+        self.db_path = app_dir / "wildcard_manager.db"
         self.settings_store = SettingsStore(app_dir)
         self.ui_state_store = UIStateStore(app_dir)
         self.settings = self.ui_state_store.load_into(self.settings_store.load())

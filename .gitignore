@@ -5,7 +5,7 @@ __pycache__/
 # Local app state and data
 config.json
 ui_state.json
-wildcard_deck.db
+wildcard_manager.db
 library/
 
 # Temporary test fixtures
@@ -23,8 +23,8 @@ dist/
 # Recovery / backup files
 *.broken_*
 *.codex_broken_*
-wildcard_deck/main_window_recovered_from_pyc.py
-wildcard_deck/main_window_restored.py
-wildcard_deck/main_window_restored_310.py
+wildcard_manager/main_window_recovered_from_pyc.py
+wildcard_manager/main_window_restored.py
+wildcard_manager/main_window_restored_310.py
 *.bak
 *.tmp

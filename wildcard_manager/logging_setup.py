@@ -1,4 +1,4 @@
-"""Logging configuration for wildcard_deck."""
+"""Logging configuration for wildcard_manager."""
 
 import logging
 import logging.handlers
@@ -11,7 +11,7 @@ def setup_logging(app_dir: Path) -> None:
     log_dir.mkdir(exist_ok=True)
     log_file = log_dir / "app.log"
 
-    root_logger = logging.getLogger("wildcard_deck")
+    root_logger = logging.getLogger("wildcard_manager")
     root_logger.setLevel(logging.DEBUG)
 
     handler = logging.handlers.RotatingFileHandler(

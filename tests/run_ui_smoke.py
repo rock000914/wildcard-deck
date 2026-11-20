@@ -6,10 +6,10 @@ from PySide6.QtWidgets import QApplication
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from wildcard_deck.models import AppSettings
-from wildcard_deck.repository import WildcardRepository
-from wildcard_deck.api import ThumbnailApiClient
-from wildcard_deck.new_wildcard_dialog import NewWildcardDialog
+from wildcard_manager.models import AppSettings
+from wildcard_manager.repository import WildcardRepository
+from wildcard_manager.api import ThumbnailApiClient
+from wildcard_manager.new_wildcard_dialog import NewWildcardDialog
 
 
 def main():
