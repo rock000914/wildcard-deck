@@ -18,7 +18,7 @@ from PIL.PngImagePlugin import PngInfo
 
 from PySide6.QtCore import QObject, QThread, Signal, Slot
 
-from .api import ThumbnailApiClient
+from .api import ThumbnailApiClient, friendly_api_error
 from .models import AppSettings, WildcardEntry
 from .repository import (
     OperationCancelledError,
@@ -197,7 +197,7 @@ class RandomGenerationWorker(QObject):
                 )
             self.finished.emit(saved_paths, prompt)
         except Exception as exc:
-            self.failed.emit(str(exc))
+            self.failed.emit(friendly_api_error(exc, self.settings))
 
     @staticmethod
     def _build_png_metadata(
@@ -437,7 +437,7 @@ class MissingThumbnailBatchWorker(QObject):
                 done += 1
                 self.item_finished.emit(refreshed)
             except Exception as exc:
-                self.item_failed.emit(entry.abs_path, str(exc))
+                self.item_failed.emit(entry.abs_path, friendly_api_error(exc, self.settings))
         if self._cancelled:
             self.cancelled.emit()
         else:

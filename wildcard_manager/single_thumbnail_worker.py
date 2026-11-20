@@ -4,7 +4,7 @@ from pathlib import Path
 
 from PySide6.QtCore import QObject, Signal, Slot
 
-from .api import ThumbnailApiClient
+from .api import ThumbnailApiClient, friendly_api_error
 from .models import AppSettings, WildcardEntry
 from .repository import WildcardRepository
 
@@ -33,4 +33,4 @@ class SingleThumbnailWorker(QObject):
                 self.entry.thumbnail_path = str(path)
                 self.finished.emit(self.entry, path.name)
         except Exception as exc:
-            self.failed.emit(str(exc))
+            self.failed.emit(friendly_api_error(exc, self.settings))

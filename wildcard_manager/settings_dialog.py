@@ -28,8 +28,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from . import theme
-from .api import ThumbnailApiClient
+from . import i18n, theme
+from .api import ThumbnailApiClient, friendly_api_error
 from .models import AppSettings
 from .repository import WildcardRepository
 from .ui_utils import setup_japanese_context_menu as _setup_japanese_context_menu
@@ -119,6 +119,12 @@ class SettingsDialog(QDialog):
 
         self.lora_root = self._path_row(settings.lora_root)
 
+        self.ui_language = NoWheelComboBox()
+        for code, label in i18n.available_languages():
+            self.ui_language.addItem(label, code)
+        language_index = self.ui_language.findData(i18n.normalize_language(settings.ui_language))
+        self.ui_language.setCurrentIndex(language_index if language_index >= 0 else 0)
+
         self.api_base_url = QLineEdit(settings.api_base_url)
         self.api_test_button = QPushButton("接続確認")
         self.api_test_button.clicked.connect(self._test_api_connection)
@@ -206,6 +212,7 @@ class SettingsDialog(QDialog):
         ):
             self._style_text_field(widget)
         for widget in (
+            self.ui_language,
             self.random_seed_mode,
             self.random_checkpoint_name,
             self.random_concept_scope,
@@ -230,6 +237,14 @@ class SettingsDialog(QDialog):
         common_content_layout = QVBoxLayout(common_content)
         common_content_layout.setContentsMargins(0, 0, 0, 0)
         common_content_layout.setSpacing(UI_SECTION_SPACING)
+        lora_box, lora_form = self._section_form("LoRAフォルダ")
+        lora_form.addRow("LoRAフォルダ", self.lora_root["widget"])
+        common_content_layout.addWidget(lora_box)
+
+        language_box, language_form = self._section_form("表示言語")
+        language_form.addRow("表示言語", self.ui_language)
+        common_content_layout.addWidget(language_box)
+
         api_box, common_form = self._section_form("接続")
         api_url_row = QWidget()
         api_url_layout = QHBoxLayout(api_url_row)
@@ -244,10 +259,6 @@ class SettingsDialog(QDialog):
         display_box, display_form = self._section_form("表示")
         display_form.addRow("一覧サムネイルサイズ", self.thumbnail_size)
         common_content_layout.addWidget(display_box)
-
-        lora_box, lora_form = self._section_form("LoRAフォルダ")
-        lora_form.addRow("LoRAフォルダ", self.lora_root["widget"])
-        common_content_layout.addWidget(lora_box)
 
         common_content_layout.addStretch(1)
         common_scroll.setWidget(common_content)
@@ -468,7 +479,7 @@ class SettingsDialog(QDialog):
             self.api.test_connection(self._candidate_settings())
             self._show_info("API", "接続できました")
         except Exception as exc:
-            self._show_error("API", str(exc))
+            self._show_error("API", friendly_api_error(exc, self._candidate_settings()))
 
     def _candidate_settings(self) -> AppSettings:
         def _parse_int(text: str, default: int) -> int:
@@ -495,6 +506,7 @@ class SettingsDialog(QDialog):
             source_wildcard_root=self.source_wildcard_root["line_edit"].text().strip(),
             source_thumbnail_root=self.source_thumbnail_root["line_edit"].text().strip(),
             lora_root=self.lora_root["line_edit"].text().strip(),
+            ui_language=str(self.ui_language.currentData() or i18n.DEFAULT_LANGUAGE),
             api_base_url=self.api_base_url.text().strip(),
             api_timeout_sec=_parse_int(self.api_timeout_sec.text(), 120),
             generation_prompt_prefix=self.generation_prompt_prefix.toPlainText().strip(),
@@ -609,6 +621,7 @@ class SettingsDialog(QDialog):
             source_wildcard_root=self.source_wildcard_root["line_edit"].text().strip(),
             source_thumbnail_root=self.source_thumbnail_root["line_edit"].text().strip(),
             lora_root=self.lora_root["line_edit"].text().strip(),
+            ui_language=str(self.ui_language.currentData() or base_settings.ui_language),
             api_base_url=self.api_base_url.text().strip(),
             api_timeout_sec=_pi(self.api_timeout_sec.text(), base_settings.api_timeout_sec),
             generation_prompt_prefix=self.generation_prompt_prefix.toPlainText().strip(),

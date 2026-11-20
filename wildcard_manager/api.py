@@ -17,6 +17,53 @@ from .models import AppSettings, WildcardEntry
 from .repository import ensure_thumbnail_destination
 
 
+def friendly_api_error(exc: BaseException, settings: AppSettings | None = None) -> str:
+    """接続系の例外を、原因と確認ポイントが分かる日本語メッセージに変換する。
+
+    原因が特定できる例外（接続不可・タイムアウト・HTTPエラー・SSL）だけを
+    定型文にし、それ以外は元のメッセージをそのまま返す（情報を消さない）。
+    """
+    base_url = ""
+    if settings is not None:
+        base_url = str(getattr(settings, "api_base_url", "") or "").rstrip("/")
+    target = base_url or "設定されている API ベースURL"
+
+    if isinstance(exc, requests.exceptions.SSLError):
+        return (
+            "画像生成 API と SSL で通信できませんでした。\n\n"
+            f"接続先: {target}\n\n"
+            "https ではなく http で接続する必要がある構成か、証明書の設定を確認してください。"
+        )
+    if isinstance(exc, requests.exceptions.ConnectionError):
+        return (
+            "画像生成 API に接続できませんでした。\n\n"
+            f"接続先: {target}\n\n"
+            "確認してください:\n"
+            "・画像生成 WebUI（Forge / A1111 / Neo）が起動しているか\n"
+            "・設定の「API ベースURL」がその WebUI のアドレスになっているか\n"
+            "・WebUI 側で API が有効になっているか\n\n"
+            "（接続拒否は、そのポートで待ち受けているアプリが無い状態です）"
+        )
+    if isinstance(exc, requests.exceptions.Timeout):
+        timeout = getattr(settings, "api_timeout_sec", None)
+        timeout_text = f"（現在の設定: {timeout} 秒）" if timeout else ""
+        return (
+            "画像生成 API の応答がタイムアウトしました。\n\n"
+            f"接続先: {target}{timeout_text}\n\n"
+            "生成に時間がかかっているか、WebUI が停止している可能性があります。\n"
+            "WebUI の状態を確認するか、設定のタイムアウト値を延ばしてください。"
+        )
+    if isinstance(exc, requests.exceptions.HTTPError):
+        status = getattr(getattr(exc, "response", None), "status_code", None)
+        status_text = f"HTTP {status}" if status else "HTTP エラー"
+        return (
+            f"画像生成 API がエラーを返しました（{status_text}）。\n\n"
+            f"接続先: {target}\n\n"
+            "API ベースURL が WebUI のものか、WebUI 側で API が有効かを確認してください。"
+        )
+    return str(exc)
+
+
 class ThumbnailApiClient:
     def test_connection(self, settings: AppSettings) -> None:
         """API が応答するか確認する。

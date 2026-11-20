@@ -69,6 +69,7 @@ from .api import ThumbnailApiClient
 from .config import SettingsStore, UIStateStore
 from .icons import icon_folder, icon_home, icon_lora, icon_new_card, icon_panel, icon_random, icon_settings, icon_star, icon_text_size
 from . import theme
+from . import i18n
 from .models import AppSettings, WildcardEntry
 from .repository import CONFLICT_POLICIES, OperationCancelledError, WildcardRepository, ensure_thumbnail_destination, next_gallery_slot, sidecar_metadata_path, strip_lora_tags, parse_prompt_tags, extract_lora_names, _safe_resolve_path
 from .thumbnail_model import ThumbnailListModel, ThumbnailItemDelegate, ThumbnailCardDelegate, CARD_TITLE_HEIGHT, CARD_FRAME_PADDING, lora_name_key, thumbnail_paths_equal
@@ -759,6 +760,8 @@ class MainWindow(QMainWindow):
     # ループ外スレッドのベースモデルスキャン完了をメインスレッドに返す。
     # スキャン本体はディスクI/Oだけを行い、Qtオブジェクトには触れない。
     lora_base_scan_done = Signal(object)
+    # スキャン途中の部分結果（ill/aniバッジを先に出すため）
+    lora_base_scan_progress = Signal(object)
 
     def __init__(self, app_dir: Path):
         super().__init__()
@@ -822,6 +825,7 @@ class MainWindow(QMainWindow):
         # ベースモデルスキャンの多重起動ガード（ワーカースレッド実行中フラグ）
         self._lora_base_scan_running = False
         self.lora_base_scan_done.connect(self._apply_lora_base_model_result)
+        self.lora_base_scan_progress.connect(self._apply_lora_base_model_progress)
         self._startup_load_requested = False
         # rescan_library の完了コールバックで参照されるため、
         # 初期化前に _on_rescan_finished が発火しても AttributeError に
@@ -1453,7 +1457,7 @@ class MainWindow(QMainWindow):
         self.card_view.selectionModel().currentChanged.connect(self._on_card_selection_changed)
         self.card_view.selectionModel().selectionChanged.connect(self._update_selection_count)
         self._update_view_sizes()
-        self.statusBar().showMessage("起動準備完了", 2000)
+        self.statusBar().showMessage(i18n.tr("起動準備完了"), 2000)
 
     def showEvent(self, event) -> None:
         super().showEvent(event)
@@ -2104,12 +2108,16 @@ class MainWindow(QMainWindow):
         try:
             self.settings = dialog.build_settings(self.settings)
             self.settings_store.save(self.settings)
+            # 表示言語の変更は再起動なしで即時反映する
+            applied_language = i18n.set_language(self.settings.ui_language)
+            self.settings.ui_language = applied_language
+            i18n.retranslate_all(QApplication.instance())
             self._update_thumbnail_size_display(self.settings.thumbnail_size)
             self.list_model.set_thumbnail_size(self.settings.thumbnail_size)
             self._sync_gallery_source()
             self._update_view_sizes()
             self._update_fs_watcher()
-            self.statusBar().showMessage("設定を保存しました", 4000)
+            self.statusBar().showMessage(i18n.tr("設定を保存しました"), 4000)
             self.load_cached_entries()
         except Exception as exc:
             self._show_error("設定保存エラー", str(exc))
@@ -2945,15 +2953,26 @@ class MainWindow(QMainWindow):
                     referenced.add(key)
         self._lora_base_scan_running = True
 
+        def progress(partial: dict[str, str]) -> None:
+            # 途中結果を先に反映してバッジを早く出す（完了時に全体で置き換える）
+            self.lora_base_scan_progress.emit(dict(partial))
+
         def work() -> None:
             try:
-                result = MainWindow._scan_lora_base_model_snapshot(roots, referenced)
+                result = MainWindow._scan_lora_base_model_snapshot(roots, referenced, progress)
             except Exception:
                 log.exception("LoRAベースモデルスキャン失敗")
                 result = None
             self.lora_base_scan_done.emit(result)
 
         QThreadPool.globalInstance().start(work)
+
+    def _apply_lora_base_model_progress(self, partial: object) -> None:
+        """スキャン途中の部分結果をバッジ描画へ先行反映する（メインスレッド）。"""
+        if not isinstance(partial, dict) or not partial:
+            return
+        self._lora_base_model_map.update(partial)
+        self.card_view.viewport().update()
 
     def _apply_lora_base_model_result(self, result: object) -> None:
         """ワーカースレッドの走査結果をメインスレッドでUIへ反映する。"""
@@ -2977,6 +2996,7 @@ class MainWindow(QMainWindow):
         cls,
         roots: "list[Path]",
         referenced: "set[str]",
+        progress=None,
     ) -> "tuple[dict[str, str], set[str]]":
         """{lora名.lower(): BaseModel} と LOST 集合を作る（ワーカースレッド実行）。
 
@@ -3028,6 +3048,13 @@ class MainWindow(QMainWindow):
                        info_data.get("baseModel", ""), overwrite=False)
             except Exception:
                 continue
+        if progress is not None:
+            # sidecar（cm-info / civitai.info）だけで決まる分を先に反映する。
+            # ここが主要な根拠で、ヘッダー走査（数十秒）を待たずにバッジが出せる。
+            try:
+                progress(mapping)
+            except Exception:
+                pass
         headers = cls._scan_lora_weight_headers(weight_index)
         if headers:
             try:
@@ -3037,6 +3064,12 @@ class MainWindow(QMainWindow):
                         registry.get(fields.get("old_hash") or "")
                     if base:
                         record(name, base, overwrite=False)
+            except Exception:
+                pass
+        if progress is not None:
+            # ヘッダー走査が終わった時点の結果を先に反映（バッジの初回表示を早める）
+            try:
+                progress(mapping)
             except Exception:
                 pass
         try:
@@ -3470,16 +3503,12 @@ class MainWindow(QMainWindow):
         except Exception:
             return False
 
-    def _delete_selected_cards(self) -> None:
-        indexes = self.card_view.selectionModel().selectedIndexes()
-        if not indexes:
-            if self.current_entry:
-                idx = self.filtered_entries.index(self.current_entry)
-                indexes = [self.list_model.index(idx, 0)]
-            else:
-                return
-
-        entries = [self.list_model.entry_at(idx) for idx in indexes]
+    def _delete_selected_cards(self, entries: list[WildcardEntry] | None = None) -> None:
+        # QAction.triggered は checked(bool) を渡してくるため、list 以外は無視する
+        if not isinstance(entries, list):
+            entries = None
+        if entries is None:
+            entries = self._selected_card_entries(self.current_entry)
         entries = [e for e in entries if e is not None]
         if not entries:
             return
@@ -3496,25 +3525,60 @@ class MainWindow(QMainWindow):
         if result != QMessageBox.Yes:
             return
 
+        # Yes を押した瞬間に一覧から消す（体感速度優先）。実ファイルのゴミ箱移動と
+        # DB削除はこの直後のイベントループで行う。失敗したカードは再読込で戻る。
+        removed_paths = {e.abs_path for e in entries}
+        self.entries = [e for e in self.entries if e.abs_path not in removed_paths]
+        for path in removed_paths:
+            self.entry_by_path.pop(path, None)
+            self.search_cache.pop(path, None)
+        if self.current_entry is not None and self.current_entry.abs_path in removed_paths:
+            self.current_entry = None
+            self._clear_detail()
+        self.apply_filters()
+        # 実ファイル削除（ゴミ箱移動）より先に、消えた状態を確実に描画する
+        self.card_view.viewport().repaint()
+        self.statusBar().showMessage(f"{count} 件をゴミ箱に移動しています...", 0)
+        QTimer.singleShot(0, lambda: self._delete_card_files(entries))
+
+    def _delete_card_files(self, entries: list[WildcardEntry]) -> None:
+        """一覧から消したカードの実ファイルをゴミ箱へ移し、DB から削除する。
+
+        ゴミ箱移動に失敗したエントリは DB 行を消さない（次回読込でカードが
+        戻り、削除できなかったことが分かる）。完全消去はせずゴミ箱行きのみ。
+        """
         errors: list[str] = []
+        deleted_count = 0
         for entry in entries:
             txt_path = Path(entry.abs_path)
             sidecar_path = sidecar_metadata_path(txt_path)
             thumb_path = Path(entry.thumbnail_path) if entry.thumbnail_path else None
-            for path in [txt_path, sidecar_path, thumb_path] if thumb_path else [txt_path, sidecar_path]:
+            paths = [txt_path, sidecar_path]
+            if thumb_path is not None:
+                paths.append(thumb_path)
+            entry_errors: list[str] = []
+            for path in paths:
                 if path is None or not path.exists():
                     continue
                 if not self._move_to_trash(path):
-                    errors.append(str(path))
+                    entry_errors.append(str(path))
+            if entry_errors:
+                errors.extend(entry_errors)
+                # 実ファイルが残っている以上 DB 行も残す（再読込でカードが戻る）
+                continue
             try:
                 self.repo.delete_entry(entry.abs_path)
+                deleted_count += 1
             except Exception as exc:
-                errors.append(str(exc))
+                errors.append(f"{entry.rel_path}: {exc}")
 
         if errors:
-            self._show_error("削除エラー", f"次のファイルをゴミ箱に移動できませんでした:\n\n{chr(10).join(errors)}")
-        else:
-            self.statusBar().showMessage(f"{count} 件のカードをゴミ箱に移動しました。", 6000)
+            self._show_error(
+                "削除エラー",
+                f"次のファイルをゴミ箱に移動できませんでした:\n\n{chr(10).join(errors[:20])}"
+                + (f"\n... 他 {len(errors) - 20} 件" if len(errors) > 20 else ""),
+            )
+        self.statusBar().showMessage(f"{deleted_count} 件のカードをゴミ箱に移動しました。", 6000)
 
         self.load_cached_entries()
 
@@ -3522,7 +3586,10 @@ class MainWindow(QMainWindow):
         if not entries:
             return
 
-        if entries[0].folder == dest_folder:
+        # 既に移動先にあるカードは対象から除く（混在選択でも残りを正しく動かす）
+        entries = [e for e in entries if e.folder != dest_folder]
+        if not entries:
+            self.statusBar().showMessage("選択したカードは既にそのフォルダにあります。", 4000)
             return
 
         count = len(entries)
@@ -3538,10 +3605,12 @@ class MainWindow(QMainWindow):
 
         errors: list[str] = []
         moved = 0
+        moved_entries: dict[str, WildcardEntry] = {}
         for entry in entries:
             try:
                 old_abs = entry.abs_path
                 new_entry = self.repo.move_entry(self.settings, entry, dest_folder)
+                moved_entries[old_abs] = new_entry
                 # お気に入りは abs_path で管理しているため、移動後も追従させる
                 if old_abs in self.favorite_paths:
                     self.favorite_paths.discard(old_abs)
@@ -3554,6 +3623,9 @@ class MainWindow(QMainWindow):
             self._show_error("移動エラー", f"次のファイルの移動に失敗しました:\n\n{chr(10).join(errors)}")
         if moved:
             self._save_favorites()
+            # 詳細ペインが移動したカードを表示していた場合、移動先へ追従させる
+            if self.current_entry is not None and self.current_entry.abs_path in moved_entries:
+                self.current_entry = moved_entries[self.current_entry.abs_path]
         self.statusBar().showMessage(f"{moved} 件のカードを「{folder_display}」に移動しました。", 6000)
         self.load_cached_entries()
 
@@ -3781,30 +3853,49 @@ class MainWindow(QMainWindow):
         self._set_edit_mode(False)
         return True
 
+    def _selected_card_entries(self, fallback: WildcardEntry | None = None) -> list[WildcardEntry]:
+        """選択中のカードを重複なしで返す。選択が無ければ fallback 単体を返す。"""
+        entries: list[WildcardEntry] = []
+        seen_paths: set[str] = set()
+        for idx in self.card_view.selectionModel().selectedIndexes():
+            e = self.list_model.entry_at(idx)
+            if e is not None and e.abs_path not in seen_paths:
+                seen_paths.add(e.abs_path)
+                entries.append(e)
+        if not entries and fallback is not None:
+            entries = [fallback]
+        return entries
+
     def _show_card_context_menu(self, pos) -> None:
         index = self.card_view.indexAt(pos)
         if not index.isValid():
             return
-        if not self.card_view.selectionModel().isSelected(index):
-            self.card_view.setCurrentIndex(index)
         entry = self.list_model.entry_at(index)
         if not entry:
             return
+        if not self.card_view.selectionModel().isSelected(index):
+            # 右クリックしたカードが選択外なら、そのカードだけを対象にする
+            # （選択済みカードへの右クリックは複数選択を保持する）
+            self.card_view.setCurrentIndex(index)
 
-        selected_indexes = self.card_view.selectionModel().selectedIndexes()
-        selected_entries = [self.list_model.entry_at(idx) for idx in selected_indexes]
-        selected_entries = [e for e in selected_entries if e is not None]
+        # 複数選択時は サムネ生成 / 削除 / 移動 / お気に入り を選択した全カードへ適用する
+        selected_entries = self._selected_card_entries(entry)
         if not selected_entries:
             selected_entries = [entry]
+        count = len(selected_entries)
+        is_multi = count > 1
 
-        # お気に入りトグル（メニュー最上部）
-        is_fav = entry.abs_path in self.favorite_paths
-        fav_label = "★ お気に入りを解除" if is_fav else "☆ お気に入りに追加"
+        # お気に入りトグル（メニュー最上部）: 全件登録済みなら解除、そうでなければ全件追加
+        all_fav = all(e.abs_path in self.favorite_paths for e in selected_entries)
+        if is_multi:
+            fav_label = f"★ お気に入りを解除 ({count}件)" if all_fav else f"☆ お気に入りに追加 ({count}件)"
+        else:
+            fav_label = "★ お気に入りを解除" if all_fav else "☆ お気に入りに追加"
 
         menu = QMenu(self)
         fav_action = menu.addAction(fav_label)
         menu.addSeparator()
-        thumb_action = menu.addAction("サムネ生成")
+        thumb_action = menu.addAction(f"サムネ生成 ({count}件)" if is_multi else "サムネ生成")
         assign_thumb_action = menu.addAction("サムネイルに画像を指定...")
         add_thumb_action = menu.addAction("サムネイルに画像を追加...")
         # 複数枚カードは「どの枚を消すか」を menu 上で直接選べるようにする。
@@ -3836,14 +3927,14 @@ class MainWindow(QMainWindow):
         thumb_folder_action = menu.addAction("サムネフォルダを開く")
         menu.addSeparator()
         rename_action = menu.addAction("名前を変更...")
-        move_action = menu.addAction("移動...")
+        move_action = menu.addAction(f"移動... ({count}件)" if is_multi else "移動...")
         menu.addSeparator()
-        delete_action = menu.addAction("削除")
+        delete_action = menu.addAction(f"削除 ({count}件)" if is_multi else "削除")
         action = menu.exec(self.card_view.viewport().mapToGlobal(pos))
         if action == fav_action:
-            self._toggle_favorite(entry)
+            self._toggle_favorites(selected_entries, remove=all_fav)
         elif action == thumb_action:
-            self.generate_thumbnail_for_current()
+            self.generate_thumbnail_for_current(selected_entries)
         elif action == assign_thumb_action:
             self.assign_thumbnail_from_image(entry)
         elif action == add_thumb_action:
@@ -3865,21 +3956,22 @@ class MainWindow(QMainWindow):
         elif action == rename_action:
             self._rename_card(entry)
         elif action == move_action:
-            self._show_move_folder_dialog()
+            self._show_move_folder_dialog(selected_entries)
         elif action == delete_action:
-            self._delete_card(entry)
+            self._delete_selected_cards(selected_entries)
 
-    def _show_move_folder_dialog(self) -> None:
-        indexes = self.card_view.selectionModel().selectedIndexes()
-        if not indexes:
-            if self.current_entry:
-                idx = self.filtered_entries.index(self.current_entry)
-                indexes = [self.list_model.index(idx, 0)]
-            else:
-                return
+    def _show_move_folder_dialog(self, entries: list[WildcardEntry] | None = None) -> None:
+        if entries is None:
+            indexes = self.card_view.selectionModel().selectedIndexes()
+            if not indexes:
+                if self.current_entry:
+                    idx = self.filtered_entries.index(self.current_entry)
+                    indexes = [self.list_model.index(idx, 0)]
+                else:
+                    return
 
-        entries = [self.list_model.entry_at(idx) for idx in indexes]
-        entries = [e for e in entries if e is not None]
+            entries = [self.list_model.entry_at(idx) for idx in indexes]
+            entries = [e for e in entries if e is not None]
         if not entries:
             return
 
@@ -4127,24 +4219,51 @@ class MainWindow(QMainWindow):
 
     def _toggle_favorite(self, entry: WildcardEntry) -> None:
         """エントリのお気に入り状態をトグルし、ビューを更新する。"""
-        if entry.abs_path in self.favorite_paths:
-            self.favorite_paths.discard(entry.abs_path)
-            msg = f"お気に入りを解除しました: {entry.stem}"
-        else:
-            self.favorite_paths.add(entry.abs_path)
-            msg = f"お気に入りに追加しました: {entry.stem}"
-        self._save_favorites()
+        self._toggle_favorites([entry])
+
+    def _toggle_favorites(self, entries: list[WildcardEntry], remove: bool | None = None) -> None:
+        """複数エントリのお気に入り状態をまとめて更新する。
+
+        ``remove`` を省略した場合は「全件お気に入り済みなら解除、そうでなければ全件追加」
+        として扱う（混在選択では足りない分を追加する）。
+        """
+        targets = [e for e in entries if e is not None]
+        if not targets:
+            return
+        if remove is None:
+            remove = all(e.abs_path in self.favorite_paths for e in targets)
+
+        changed = 0
+        for e in targets:
+            if remove:
+                if e.abs_path in self.favorite_paths:
+                    self.favorite_paths.discard(e.abs_path)
+                    changed += 1
+            else:
+                if e.abs_path not in self.favorite_paths:
+                    self.favorite_paths.add(e.abs_path)
+                    changed += 1
+        if changed:
+            self._save_favorites()
+
         # カードの星バッジを即座に再描画
+        target_paths = {e.abs_path for e in targets}
         for row, e in enumerate(self.list_model.entries):
-            if e.abs_path == entry.abs_path:
+            if e.abs_path in target_paths:
                 idx = self.list_model.index(row, 0)
                 self.list_model.dataChanged.emit(idx, idx, [Qt.DecorationRole])
-                break
         # お気に入りフォルダを表示中の場合はフィルターを再適用してカードを更新
         if self.current_folder_prefix == "__favorites__":
             self.apply_filters()
         # ★ お気に入り 配下の階層（元フォルダのミラー）を更新
         self._refresh_favorites_tree()
+
+        if len(targets) > 1:
+            msg = (f"{len(targets)}件のお気に入りを解除しました" if remove
+                   else f"{len(targets)}件をお気に入りに追加しました")
+        else:
+            msg = (f"お気に入りを解除しました: {targets[0].stem}" if remove
+                   else f"お気に入りに追加しました: {targets[0].stem}")
         self.statusBar().showMessage(msg, 3000)
 
     def show_toast(self, message: str, ms: int | None = None) -> None:
@@ -4213,8 +4332,10 @@ class MainWindow(QMainWindow):
         # バッチ中はエラーダイアログをスキップして次へ進む（連続ダイアログ防止）
         if self._thumbnail_batch_total > 1:
             done = self._thumbnail_batch_total - len(self._thumbnail_batch_queue) - 1
+            # 複数行の詳細はステータスバーでは読みにくいので1行目だけ出す
+            short = (message or "").splitlines()[0]
             self.statusBar().showMessage(
-                f"サムネイル生成失敗 ({done+1}/{self._thumbnail_batch_total}): {message}",
+                f"サムネイル生成失敗 ({done+1}/{self._thumbnail_batch_total}): {short}",
                 5000,
             )
         else:
@@ -4490,7 +4611,7 @@ class MainWindow(QMainWindow):
             rest = self.list_model.gallery_paths(updated)
             self.show_toast(f"{len(moved)}枚のサムネイルを削除しました" + (f"（残り {len(rest)} 枚）" if rest else ""))
 
-    def generate_thumbnail_for_current(self) -> None:
+    def generate_thumbnail_for_current(self, entries: list[WildcardEntry] | None = None) -> None:
         """選択中のカード（単数または複数）のサムネイルを生成する。
 
         複数カードが選択されている場合はキューに積んで順次生成する。
@@ -4501,23 +4622,20 @@ class MainWindow(QMainWindow):
             self._show_info("サムネ生成", "別のサムネ生成が実行中です。")
             return
 
-        # 選択中の全エントリを取得
-        indexes = self.card_view.selectionModel().selectedIndexes()
+        # 対象エントリ（引数優先。未指定なら現在の選択）
         selected_entries: list[WildcardEntry] = []
-        if indexes:
+        if isinstance(entries, list) and entries:
             seen_paths: set[str] = set()
-            for idx in indexes:
-                e = self.list_model.entry_at(idx)
+            for e in entries:
                 if e is not None and e.abs_path not in seen_paths:
                     seen_paths.add(e.abs_path)
                     selected_entries.append(e)
+        else:
+            selected_entries = self._selected_card_entries(self.current_entry)
 
-        # 選択がない場合は現在のエントリのみ
         if not selected_entries:
-            if not self.current_entry:
-                self._show_info("サムネ生成", "先に wildcard を選択してください。")
-                return
-            selected_entries = [self.current_entry]
+            self._show_info("サムネ生成", "先に wildcard を選択してください。")
+            return
 
         # ランダムワイルドカード使用可否は1回だけ尋ねる
         use_random = self._ask_use_random_wildcard()

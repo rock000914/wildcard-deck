@@ -46,6 +46,12 @@ def main() -> int:
     except Exception:
         log.debug("Failed to hide console window", exc_info=True)
     app = QApplication(sys.argv)
+    # 表示言語は QApplication 生成直後・ウィジェット生成前に確定させる。
+    # 個々のウィジェットは表示イベントでカタログ翻訳される（wildcard_manager/i18n.py）。
+    from wildcard_manager import i18n
+    from wildcard_manager.config import SettingsStore
+    i18n.install(app)
+    i18n.set_language(SettingsStore(app_dir).load().ui_language)
     app.setApplicationName("Wildcard Manager")
     app.setDesktopFileName(app_id)
     app_font = QFont(_choose_ui_font_family())
