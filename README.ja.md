@@ -56,7 +56,7 @@ library/
 │   │   ├── character1.preview.webp   # 1枚目
 │   │   └── character1.g2.webp        # 2枚目以降（.g3, .g4 …）
 │   └── ...
-wildcard_manager.db     # SQLite インデックス（高速化用）
+wildcard_deck.db     # SQLite インデックス（高速化用）
 config.json             # 設定
 ui_state.json           # UI 状態（ソート・分割バー位置等）
 ```
@@ -85,7 +85,7 @@ python app.py
 
 `設定` → `共通設定` の **表示言語** で `日本語` / `English` / `한국어` / `中文（简体）` を切り替えられます。
 選択は `config.json` の `ui_language` に保存され、再起動なしでUIに反映されます。
-翻訳カタログは `wildcard_manager/i18n/<code>.json`（日本語の原文をキーにした対応表）で、
+翻訳カタログは `wildcard_deck/i18n/<code>.json`（日本語の原文をキーにした対応表）で、
 未翻訳の文字列は日本語のまま表示されます。
 
 ## 初回設定
@@ -102,19 +102,19 @@ python app.py
 | ファイル | 役割 |
 |---------|------|
 | `app.py` | エントリーポイント |
-| `wildcard_manager/main_window.py` | メインウィンドウ |
-| `wildcard_manager/api.py` | sd-webui API クライアント |
-| `wildcard_manager/repository.py` | SQLite + ファイルシステム操作 |
-| `wildcard_manager/models.py` | データモデル（AppSettings, WildcardEntry） |
-| `wildcard_manager/config.py` | 設定の読み書き |
-| `wildcard_manager/i18n.py` | 表示言語の切り替え（ウィジェット翻訳・カタログ読込） |
-| `wildcard_manager/i18n/*.json` | 英語・韓国語・中国語の翻訳カタログ |
-| `wildcard_manager/thumbnail_model.py` | サムネイル一覧のモデルとデリゲート |
-| `wildcard_manager/thumbnail_workers.py` | サムネイル読込ワーカー |
-| `wildcard_manager/tag_editor.py` | タグエディットウィジェット |
-| `wildcard_manager/new_wildcard_dialog.py` | 新規ワイルドカード作成ダイアログ |
-| `wildcard_manager/single_thumbnail_worker.py` | 個別サムネイル生成ワーカー |
-| `wildcard_manager/ui_utils.py` | ファイルマネージャー操作・コンテキストメニュー共通化 |
+| `wildcard_deck/main_window.py` | メインウィンドウ |
+| `wildcard_deck/api.py` | sd-webui API クライアント |
+| `wildcard_deck/repository.py` | SQLite + ファイルシステム操作 |
+| `wildcard_deck/models.py` | データモデル（AppSettings, WildcardEntry） |
+| `wildcard_deck/config.py` | 設定の読み書き |
+| `wildcard_deck/i18n.py` | 表示言語の切り替え（ウィジェット翻訳・カタログ読込） |
+| `wildcard_deck/i18n/*.json` | 英語・韓国語・中国語の翻訳カタログ |
+| `wildcard_deck/thumbnail_model.py` | サムネイル一覧のモデルとデリゲート |
+| `wildcard_deck/thumbnail_workers.py` | サムネイル読込ワーカー |
+| `wildcard_deck/tag_editor.py` | タグエディットウィジェット |
+| `wildcard_deck/new_wildcard_dialog.py` | 新規ワイルドカード作成ダイアログ |
+| `wildcard_deck/single_thumbnail_worker.py` | 個別サムネイル生成ワーカー |
+| `wildcard_deck/ui_utils.py` | ファイルマネージャー操作・コンテキストメニュー共通化 |
 
 ## 更新履歴
 
