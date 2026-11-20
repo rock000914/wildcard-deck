@@ -103,7 +103,7 @@ pip install -r requirements.txt
 python app.py
 ```
 
-On Windows you can also double-click `run_wildcard_manager.bat`, which launches the app without a console window.
+On Windows you can also double-click `run_wildcard_deck.bat`, which launches the app without a console window.
 
 ### Languages
 
