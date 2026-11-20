@@ -354,7 +354,7 @@
   "左パネルを表示/非表示": "显示/隐藏左侧面板",
   "右パネルを表示/非表示": "显示/隐藏右侧面板",
   "1枚目を登録しました:": "已注册为第 1 张:",
-  "Wildcard Manager\n\nランダム生成と wildcard 管理用の GUI です。": "Wildcard Manager\n\n用于随机生成和 wildcard 管理的 GUI。",
+  "Wildcard Deck\n\nランダム生成と wildcard 管理用の GUI です。": "Wildcard Deck\n\n用于随机生成和 wildcard 管理的 GUI。",
   "件をお気に入りに追加しました": " 项已添加到收藏",
   "📄 画像(.png/.jpg/.webp) または JSON(.json) をドロップしてインポート": "📄 拖放图像(.png/.jpg/.webp)或 JSON(.json) 以导入",
   "表示言語": "显示语言",

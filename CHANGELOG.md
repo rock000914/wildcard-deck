@@ -2,8 +2,13 @@
 
 **Language:** English | [日本語 (full detailed history)](README.ja.md)
 
-All notable changes to Wildcard Manager are summarized here.
+All notable changes to Wildcard Deck are summarized here.
 The full development notes — including implementation details and verification results — are preserved in Japanese in [README.ja.md](README.ja.md).
+
+## Unreleased — Renamed to Wildcard Deck
+
+- Renamed the product from "Wildcard Manager" to **Wildcard Deck** (window title, application name, About dialog, and documentation). The Python package, database file, and `AppUserModelID` are unchanged.
+- Officially set the **category** to *Wildcard Desktop Manager* and the **feature set** to ワイルドカードの作成・編集・整理・検索 (create / edit / organize / search wildcards).
 
 ## Unreleased — Localization
 

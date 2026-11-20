@@ -1,4 +1,4 @@
-# Wildcard Manager
+# Wildcard Deck
 
 **Language:** English | [日本語](README.ja.md)
 
@@ -7,9 +7,12 @@
 ![Platform](https://img.shields.io/badge/Platform-Windows-0078D6?logo=windows&logoColor=white)
 ![Status](https://img.shields.io/badge/Version-2.5-orange)
 
+**Category:** Wildcard Desktop Manager
+**Features:** Create, edit, organize, and search wildcards
+
 A desktop app for managing Stable Diffusion wildcards in one place.
 
-Wildcard Manager keeps a growing collection of `.txt` wildcard files organized, searchable, and visual — with thumbnails, custom tags, favorites, LoRA awareness, and thumbnail generation via the sd-webui API, all from a single GUI built with PySide6.
+Wildcard Deck keeps a growing collection of `.txt` wildcard files organized, searchable, and visual — with thumbnails, custom tags, favorites, LoRA awareness, and thumbnail generation via the sd-webui API, all from a single GUI built with PySide6.
 
 > Primarily developed and tested on Windows.
 

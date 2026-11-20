@@ -354,7 +354,7 @@
   "左パネルを表示/非表示": "왼쪽 패널 표시/숨기기",
   "右パネルを表示/非表示": "오른쪽 패널 표시/숨기기",
   "1枚目を登録しました:": "1번째 이미지로 등록했습니다:",
-  "Wildcard Manager\n\nランダム生成と wildcard 管理用の GUI です。": "Wildcard Manager\n\n랜덤 생성과 wildcard 관리를 위한 GUI입니다.",
+  "Wildcard Deck\n\nランダム生成と wildcard 管理用の GUI です。": "Wildcard Deck\n\n랜덤 생성과 wildcard 관리를 위한 GUI입니다.",
   "件をお気に入りに追加しました": "개를 즐겨찾기에 추가했습니다",
   "📄 画像(.png/.jpg/.webp) または JSON(.json) をドロップしてインポート": "📄 이미지(.png/.jpg/.webp) 또는 JSON(.json)을 드롭하여 가져오기",
   "表示言語": "표시 언어",

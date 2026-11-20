@@ -865,7 +865,7 @@ class MainWindow(QMainWindow):
         self._sync_gallery_source()
         self.item_delegate = ThumbnailCardDelegate(self)
 
-        self.setWindowTitle("Wildcard Manager")
+        self.setWindowTitle("Wildcard Deck")
         self.setMinimumSize(1280, 760)
         self.resize(max(self.settings.window_width, 1280), max(self.settings.window_height, 760))
         self._build_ui()
@@ -1608,8 +1608,8 @@ class MainWindow(QMainWindow):
 
     def _show_about(self) -> None:
         self._show_info(
-            "Wildcard Manager",
-            "Wildcard Manager\n\nランダム生成と wildcard 管理用の GUI です。",
+            "Wildcard Deck",
+            "Wildcard Deck\n\nランダム生成と wildcard 管理用の GUI です。",
         )
 
     def _show_shortcuts_help(self) -> None:

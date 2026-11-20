@@ -1,4 +1,4 @@
-"""Internationalization (i18n) support for Wildcard Manager.
+"""Internationalization (i18n) support for Wildcard Deck.
 
 The UI source strings are authored in Japanese. Translation catalogs live in
 ``wildcard_manager/i18n/<code>.json`` and map the Japanese source text to the

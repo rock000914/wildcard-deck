@@ -52,7 +52,7 @@ def main() -> int:
     from wildcard_manager.config import SettingsStore
     i18n.install(app)
     i18n.set_language(SettingsStore(app_dir).load().ui_language)
-    app.setApplicationName("Wildcard Manager")
+    app.setApplicationName("Wildcard Deck")
     app.setDesktopFileName(app_id)
     app_font = QFont(_choose_ui_font_family())
     app_font.setPointSize(9)

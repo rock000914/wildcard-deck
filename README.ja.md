@@ -1,7 +1,9 @@
-# Wildcard Manager
+# Wildcard Deck
 
 **Language:** [English](README.md) | 日本語
 
+**カテゴリー：** Wildcard Desktop Manager
+**機能：** ワイルドカードの作成・編集・整理・検索
 
 Stable Diffusion のワイルドカードを一元管理するデスクトップアプリです。増え続ける `.txt` ワイルドカードの整理・検索・サムネイル管理・新規作成までを、単一の GUI 上で完結させます。
 
